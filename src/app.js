@@ -13,11 +13,69 @@ import vertexShader from './shaders/vertex.glsl'
 
 import fragmentShader1 from './shaders/fragment-1.glsl'
 
+import fragmentShader2 from './shaders/fragment-2.glsl'
+
 
 
 let selected = 0
-let fragArray = [fragmentShader1]
+let fragArray = [fragmentShader1, fragmentShader2]
 
+document.onkeydown = checkKey;
+
+function checkKey(e) {
+e.preventDefault()
+    e = e || window.event;
+
+    if (e.keyCode == '38') {
+        // up arrow
+        console.log(selected)
+    }
+    else if (e.keyCode == '40') {
+        // down arrow
+        console.log(fragArray[selected])
+    }
+    else if (e.keyCode == '37') {
+       // left arrow
+       console.log(selected)
+
+
+       if(selected > 0){
+            selected --
+          shaderMaterial.needsUpdate=true
+
+          shaderMaterial.fragmentShader = fragArray[selected]
+       }
+
+       else if(selected === 0){
+         selected = fragArray.length -1
+          shaderMaterial.needsUpdate=true
+
+          shaderMaterial.fragmentShader = fragArray[selected]
+       }
+
+
+    }
+    else if (e.keyCode == '39') {
+       // right arrow
+       console.log(selected)
+
+              if(selected < fragArray.length -1){
+                  selected ++
+                  shaderMaterial.needsUpdate=true
+
+                 shaderMaterial.fragmentShader = fragArray[selected]
+              }
+
+            else  if(selected === fragArray.length -1){
+              selected = 0
+                shaderMaterial.needsUpdate=true
+
+                 shaderMaterial.fragmentShader = fragArray[selected]
+              }
+
+    }
+
+}
 
 const canvas = document.querySelector('canvas.webgl')
 
@@ -36,6 +94,7 @@ const shaderMaterial  = new THREE.ShaderMaterial({
   fragmentShader: fragArray[selected],
   side: THREE.DoubleSide
 })
+console.log(shaderMaterial)
 let sceneGroup, left, right, displayScreen, display
 
 gtlfLoader.load(
@@ -44,6 +103,7 @@ gtlfLoader.load(
     console.log(gltf)
     gltf.scene.scale.set(4.5,4.5,4.5)
     sceneGroup = gltf.scene
+    sceneGroup.needsUpdate = true
     sceneGroup.position.y -= 3
     scene.add(sceneGroup)
 
@@ -65,7 +125,7 @@ gtlfLoader.load(
       return child.name === 'Body'
     })
 
-
+ displayScreen.needsUpdate = true
 
 
 
@@ -148,6 +208,7 @@ const tick = () =>{
 
   if(sceneGroup){
     // sceneGroup.rotation.y += .001
+    displayScreen.needsUpdate = true
   }
 
 
@@ -156,7 +217,7 @@ const tick = () =>{
   controls.update()
 
   shaderMaterial.uniforms.uTime.value = elapsedTime
-
+  shaderMaterial.fragmentShader = fragArray[selected]
 
 
 
