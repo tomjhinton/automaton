@@ -15,10 +15,23 @@ import fragmentShader1 from './shaders/fragment-1.glsl'
 
 import fragmentShader2 from './shaders/fragment-2.glsl'
 
+import fragmentShader3 from './shaders/fragment-3.glsl'
+
+import fragmentShader4 from './shaders/fragment-4.glsl'
+
+import fragmentShader5 from './shaders/fragment-5.glsl'
+
+import fragmentShader6 from './shaders/fragment-6.glsl'
+
+import fragmentShader7 from './shaders/fragment-7.glsl'
 
 
-let selected = 0
-let fragArray = [fragmentShader1, fragmentShader2]
+
+
+let fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7]
+
+let selected = Math.floor(Math.random() * fragArray.length )
+
 
 document.onkeydown = checkKey;
 
