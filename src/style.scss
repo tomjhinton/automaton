@@ -1,0 +1,100 @@
+@font-face {
+  font-family: Tapeworm;
+  src: url('../static/Tapeworm-Regular.otf');
+}
+
+.loading-bar
+{
+    color: white;
+    font-size: 10em;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 2px;
+    background: #ffffff;
+    transform: scaleX(0);
+    transform-origin: top left;
+    transition: transform 0.5s;
+
+
+}
+
+.loading-bar.ended
+{
+    transform: scaleX(0);
+    transform-origin: 100% 0;
+    transition: transform 1.5s ease-in-out;
+}
+
+.loading-bar-text
+{
+    pointer-events: none;
+    font-family: Tapeworm;
+    color: white;
+    font-size: 10em;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    justify-content: center;
+    width: 100%;
+    height: 20px;
+    // transition: transform 1.5s ease-in-out;
+
+
+
+
+}
+
+.fade-out {
+
+  animation: fadeOut ease 4s  forwards;;
+  -webkit-animation: fadeOut ease 4s  forwards;;
+  -moz-animation: fadeOut ease 4s  forwards;;
+  -o-animation: fadeOut ease 4s  forwards;;
+  -ms-animation: fadeOut ease 4s  forwards;;
+}
+@keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+  }
+}
+
+@-moz-keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+  }
+}
+
+@-webkit-keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+  }
+}
+
+@-o-keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+  }
+}
+
+@-ms-keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+}
+}

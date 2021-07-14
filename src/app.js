@@ -81,7 +81,58 @@ const canvas = document.querySelector('canvas.webgl')
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color( 0xffffff )
-const gtlfLoader = new GLTFLoader()
+const loadingBarElement = document.querySelector('.loading-bar')
+const loadingBarText = document.querySelector('.loading-bar-text')
+const loadingManager = new THREE.LoadingManager(
+  // Loaded
+  () =>{
+    window.setTimeout(() =>{
+      gsap.to(overlayMaterial.uniforms.uAlpha, { duration: 3, value: 0, delay: 1 })
+
+      loadingBarElement.classList.add('ended')
+      loadingBarElement.style.transform = ''
+
+      loadingBarText.classList.add('fade-out')
+
+    }, 500)
+  },
+
+  // Progress
+  (itemUrl, itemsLoaded, itemsTotal) =>{
+    const progressRatio = itemsLoaded / itemsTotal
+    loadingBarElement.style.transform = `scaleX(${progressRatio})`
+
+  }
+)
+
+const gtlfLoader = new GLTFLoader(loadingManager)
+
+const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1)
+const overlayMaterial = new THREE.ShaderMaterial({
+  depthWrite: false,
+  uniforms:
+    {
+      uAlpha: { value: 1 }
+    },
+  transparent: true,
+  vertexShader: `
+        void main()
+        {
+            gl_Position = vec4(position, 1.0);
+        }
+    `,
+  fragmentShader: `
+  uniform float uAlpha;
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+        }
+    `
+})
+
+const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial)
+scene.add(overlay)
+
 
 const shaderMaterial  = new THREE.ShaderMaterial({
   transparent: true,
