@@ -294,7 +294,7 @@ function onClick() {
 // console.log(intersectsArr)
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
+  // console.log(mouse.x)
 	raycaster.setFromCamera( mouse, camera );
 
 	var intersects = raycaster.intersectObjects( intersectsArr, true );
@@ -311,6 +311,29 @@ function onClick() {
 	}
 
 }
+
+function onTouch(e){
+  // console.log((e.touches[0].clientX / window.innerWidth ) * 2 - 1)
+  mouse.x = (e.touches[0].clientX / window.innerWidth ) * 2 - 1;
+  mouse.y =( e.touches[0].clientY/ window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera( mouse, camera );
+
+	var intersects = raycaster.intersectObjects( intersectsArr, true );
+
+	if ( intersects.length > 0 ) {
+	    // console.log( 'Intersection:', intersects[0].object.parent.name );
+
+      if(intersects[0].object.parent.name === 'Left'){
+        scrollLeft()
+      }
+      if(intersects[0].object.parent.name === 'Right'){
+        scrollRight()
+      }
+	}
+}
+
+renderer.domElement.addEventListener('touchstart', onTouch, false);
 
 const clock = new THREE.Clock()
 
