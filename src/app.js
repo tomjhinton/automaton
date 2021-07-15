@@ -35,60 +35,81 @@ let selected = Math.floor(Math.random() * fragArray.length )
 
 document.onkeydown = checkKey;
 
+function resetL(){
+  gsap.to(left.position, { duration: .5, y: left.position.y + 0.005, delay: 0 })
+}
+
+function resetR(){
+  gsap.to(right.position, { duration: .5, y: right.position.y + 0.005, delay: 0 })
+}
+
+function scrollLeft(){
+  gsap.to(left.position, { duration: .5, y: left.position.y - 0.005, delay: 0, onComplete: resetL })
+  // left.position.y -=.001
+  if(selected > 0){
+       selected --
+     shaderMaterial.needsUpdate=true
+
+     shaderMaterial.fragmentShader = fragArray[selected]
+  }
+
+  else if(selected === 0){
+    selected = fragArray.length -1
+     shaderMaterial.needsUpdate=true
+
+     shaderMaterial.fragmentShader = fragArray[selected]
+  }
+}
+
+function scrollRight(){
+    gsap.to(right.position, { duration: .5, y: right.position.y - 0.005, delay: 0, onComplete: resetR })
+  if(selected < fragArray.length -1){
+      selected ++
+      shaderMaterial.needsUpdate=true
+
+     shaderMaterial.fragmentShader = fragArray[selected]
+  }
+
+else  if(selected === fragArray.length -1){
+  selected = 0
+    shaderMaterial.needsUpdate=true
+
+     shaderMaterial.fragmentShader = fragArray[selected]
+  }
+}
+
+
 function checkKey(e) {
 e.preventDefault()
     e = e || window.event;
 
     if (e.keyCode == '38') {
         // up arrow
-        console.log(selected)
+        // console.log(selected)
     }
     else if (e.keyCode == '40') {
         // down arrow
-        console.log(fragArray[selected])
+        // console.log(fragArray[selected])
     }
     else if (e.keyCode == '37') {
        // left arrow
-       console.log(selected)
+       scrollLeft()
 
 
-       if(selected > 0){
-            selected --
-          shaderMaterial.needsUpdate=true
 
-          shaderMaterial.fragmentShader = fragArray[selected]
-       }
-
-       else if(selected === 0){
-         selected = fragArray.length -1
-          shaderMaterial.needsUpdate=true
-
-          shaderMaterial.fragmentShader = fragArray[selected]
-       }
 
 
     }
     else if (e.keyCode == '39') {
        // right arrow
-       console.log(selected)
+       // console.log(selected)
 
-              if(selected < fragArray.length -1){
-                  selected ++
-                  shaderMaterial.needsUpdate=true
-
-                 shaderMaterial.fragmentShader = fragArray[selected]
-              }
-
-            else  if(selected === fragArray.length -1){
-              selected = 0
-                shaderMaterial.needsUpdate=true
-
-                 shaderMaterial.fragmentShader = fragArray[selected]
-              }
+        scrollRight()
 
     }
 
 }
+
 
 const canvas = document.querySelector('canvas.webgl')
 
@@ -158,13 +179,14 @@ const shaderMaterial  = new THREE.ShaderMaterial({
   fragmentShader: fragArray[selected],
   side: THREE.DoubleSide
 })
-console.log(shaderMaterial)
+// console.log(shaderMaterial)
 let sceneGroup, left, right, displayScreen, display
 
+let intersectsArr = []
 gtlfLoader.load(
   'display.glb',
   (gltf) => {
-    console.log(gltf)
+    // console.log(gltf)
     gltf.scene.scale.set(4.5,4.5,4.5)
     sceneGroup = gltf.scene
     sceneGroup.needsUpdate = true
@@ -188,8 +210,9 @@ gtlfLoader.load(
     display = gltf.scene.children.find((child) => {
       return child.name === 'Body'
     })
-
+intersectsArr.push(left.children[0], left.children[1], right.children[0], right.children[1])
  displayScreen.needsUpdate = true
+ // console.log(left)
 
 
 
@@ -261,6 +284,33 @@ renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2()
+
+renderer.domElement.addEventListener( 'click', onClick, false );
+
+function onClick() {
+	event.preventDefault();
+// console.log(intersectsArr)
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+	raycaster.setFromCamera( mouse, camera );
+
+	var intersects = raycaster.intersectObjects( intersectsArr, true );
+
+	if ( intersects.length > 0 ) {
+	    // console.log( 'Intersection:', intersects[0].object.parent.name );
+
+      if(intersects[0].object.parent.name === 'Left'){
+        scrollLeft()
+      }
+      if(intersects[0].object.parent.name === 'Right'){
+        scrollRight()
+      }
+	}
+
+}
 
 const clock = new THREE.Clock()
 
