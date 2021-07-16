@@ -54,11 +54,11 @@ let selected = fragArray.length -1
 snippet.textContent = fragArray[selected]
 const points =[
   {
-    position: new THREE.Vector3(3.55, 0.3, -6.6),
+    position: new THREE.Vector3(4.55, 0.3, -6.6),
     element: document.querySelector('.point-0')
   },
   {
-    position: new THREE.Vector3(3.55, -2.3, -6.6),
+    position: new THREE.Vector3(4.55, -2.3, -6.6),
     element: document.querySelector('.point-1')
   }
 
@@ -373,7 +373,7 @@ function onClick() {
     // console.log( 'Intersection:', intersects[0].object.parent.name );
 
     if(intersects[0].object.parent.name === 'Left'){
-      scrollRight()
+      scrollLeft()
     }
     if(intersects[0].object.parent.name === 'Right'){
       scrollRight()
