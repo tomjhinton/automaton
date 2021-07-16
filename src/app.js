@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
-import Prism from "prismjs"
+import Prism from 'prismjs'
 
 import vertexShader from './shaders/vertex.glsl'
 
@@ -36,7 +36,7 @@ let selected = Math.floor(Math.random() * fragArray.length )
 snippet.textContent = fragArray[selected]
 const points =[
   {
-    position: new THREE.Vector3(1.55, 0.3, -0.6),
+    position: new THREE.Vector3(3.55, 0.3, -3.6),
     element: document.querySelector('.point-0')
   }
 
@@ -93,18 +93,18 @@ function scrollRight(){
 function checkKey(e) {
   e.preventDefault()
   e = e || window.event
-
-  if (e.keyCode === '38') {
+  console.log(e)
+  if (e.keyCode === 38) {
     // up arrow
     // console.log(selected)
-  } else if (e.keyCode === '40') {
+  } else if (e.keyCode === 40) {
     // down arrow
     // console.log(fragArray[selected])
-  } else if (e.keyCode === '37') {
+  } else if (e.keyCode === 37) {
     // left arrow
     scrollLeft()
 
-  } else if (e.keyCode === '39') {
+  } else if (e.keyCode === 39) {
     // right arrow
     // console.log(selected)
 
