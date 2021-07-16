@@ -269,13 +269,6 @@ vec4 sdScene(vec3 p) {
   // vec3 p2 = p;
     vec3 p3 = p;
 
-  // p.xyz += 1. * .1 * cos(3. * p.yzx + vTime);
-  // p.xyz += 1. * .05 * cos(11. * p.yzx + vTime);
-  // p.xyz += 1. * .025 * cos(17. * p.yzx + vTime);
-  // //
-  // p3.xyz += 1.5 * .1 * cos(3. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .05 * sin(11. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .025 * cos(17. * p3.yzx + vTime);
 
   float warpsScale = 3.;
   vec3 color1 = vec3(1., vUv.y, vUv.x);
@@ -288,10 +281,7 @@ vec4 sdScene(vec3 p) {
 
 
   vec3 color2 = vec3(1., 1., .0);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+
 
   vec3 color3 = vec3(.5, vUv.x,vUv.y);
   color3.xyz += warpsScale * .1 * sin(3. * color3.yzx + vTime);
@@ -315,25 +305,6 @@ vec4 sdScene(vec3 p) {
 
   float displacement4 = cos(18.0 * p3.x + vTime) * sin(3.0 * p3.y + vTime) * sin(0.5 * p3.z + vTime)  ;
 
-  // p3 = opRep(p3, vec3(4. ,4. , 0.));
-  // p3 = opCheapBend(p3, sin(vTime));
-  // p = opCheapBend(p);
-
-  // p3 += cnoise(p3 * 1.);
-
-
-
- //
- // p.xy *= rot(1.6);
- // p.x += 1.;
- // p3.xz *= rot(vTime * .5);
- //
- // p3.xy *= rot(vTime * .5) * -1.;
- // p3.xz *= rot(vTime * .5) * -1.;
- // p.xy *= rot(vTime * .5) * -1.;
- // p.xz *= rot(vTime * .5) * -1.;
-
- // p.xy *= rot(vTime * .5 * -1.);
 
   vec4 sphereLeft = sdSphere(p3 + displacement  ,1.8 , vec3(1., .0, .0), color1 );
   vec4 sphereRight = sdSphere(p3 , 1.8, vec3(-1.,.0, 0.), color1);
@@ -342,25 +313,14 @@ vec4 sdScene(vec3 p) {
   vec4 cube = sdBox(vec3(p3.x, p3.y, p3.z +1.)    , vec3(1., 2.5, 1.) , color4 );
   vec4 cube2 = sdBox(vec3(p.x + 2., p.y , p.z + 1. ) + displacement  , vec3( 3., .7, 1.) , color4 );
   vec4 cube3 = sdBox(vec3(p.x + 4., p.y , p.z + 1. )  , vec3( .25, 4. + displacement2, 1.) , color4);
-  // vec4 co = mix(mix(sphereLeft, cube, sin(vTime* .8)), mix(sphereRight, cube, cos(vTime)), tan(vTime * .5));;
-  // co = sphereRight;
-   // co = minWithColor(co, sphereTop);
-   // co = minWithColor(co, sphereBot);
-   // co = closest object containing "signed distance" and color
-  // co = minWithColor(co, sdFloor(p, vec3(1, .5, 0)));
+
   vec4 link = sdLink(p3 , 1.4, 2., 2. * sin(vTime)   , color1);
   vec4 link2 = sdLink(p3 + displacement3, .8, .15, 1.3 + displacement, color3);
   vec4 link3 = sdLink(p3, 1.2, .125, .1 , color4 );
-  // vec4 hmm = smoothUnionSDF(link, link2, .005);
-  // float blah = mix(link, link2, sin(vTime * .5) * .5 +1.);
-   // float blah = smoothDifferenceSDF(cube.r, cnoise(p * 2.), .05 );
+
    vec4 mixed = link2;
 
-   // mixed = minWithColor(mixed, sphereLeft);
-    // mixed = minWithColor(mixed, cube);
-      // mixed = minWithColor(mixed, cube2);
-      //   mixed = minWithColor(mixed, cube3);
-   // mixed = minWithColor(mixed, sphereRight);
+
    mixed.xyz += 5. * .1 * cos(3. * mixed.yzx + (vTime * .1));
    mixed.xyz += 5. * .05 * cos(11. * mixed.yzx + (vTime * .1));
    mixed.xyz += 5. * .025 * cos(17. * mixed.yzx + (vTime * .1));

@@ -1,12 +1,11 @@
+
 const float PI = 3.1415926535897932384626433832795;
 const float TAU = 2.* PI;
 uniform vec3 uColor;
 uniform vec3 uPosition;
 uniform vec3 uRotation;
 uniform vec2 uResolution;
-// uniform sampler2D uTexture;
-// uniform sampler2D uVideo;
-// uniform sampler2D uVideo2;
+
 uniform vec2 uMouse;
 
 
@@ -16,9 +15,7 @@ varying float vElevation;
 varying float vTime;
 varying vec3 vNorm;
 
-precision highp float;
 
-#define PI 3.14159265359
 
 vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
 {
@@ -41,19 +38,6 @@ float smoothIntersectSDF(float distA, float distB, float k )
   return mix(distA, distB, h ) + k*h*(1.-h);
 }
 
-// float smoothUnionSDF(float distA, float distB, float k ) {
-//   float h = clamp(0.5 + 0.5*(distA-distB)/k, 0., 1.);
-//   return mix(distA, distB, h) - k*h*(1.-h);
-// }
-
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
 
 float smoothDifferenceSDF(float distA, float distB, float k) {
   float h = clamp(0.5 - 0.5*(distB+distA)/k, 0., 1.);
@@ -92,15 +76,6 @@ vec4 minWithColor(vec4 obj1, vec4 obj2) {
   return obj1;
 }
 
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
-
 mat2 rot (float a) {
 	return mat2(cos(a),sin(a),-sin(a),cos(a));
 }
@@ -118,11 +93,7 @@ vec4 differenceSDF(vec4 a, vec4 b) {
     return a.w > -b.w? a : vec4(b.rgb,-b.w);
 }
 
-// float opRep( in vec3 p, in vec3 c, in sdf3d primitive )
-// {
-//     vec3 q = mod(p+0.5*c,c)-0.5*c;
-//     return primitive( q );
-// }
+
 vec3 opRep( vec3 p, vec3 c ) {
   float displacement = sin(9. * p.x + vTime * .5) * sin(3. * p.y + vTime) * sin(3. * p.z + vTime) * 0.25 ;
     vec3 q = mod(p,c)-0.5*c;
@@ -133,13 +104,7 @@ vec4 sdScene(vec3 p) {
   // vec3 p2 = p;
     vec3 p3 = p;
 
-  // p.xyz += 1. * .1 * cos(3. * p.yzx + vTime);
-  // p.xyz += 1. * .05 * cos(11. * p.yzx + vTime);
-  // p.xyz += 1. * .025 * cos(17. * p.yzx + vTime);
-  // //
-  // p3.xyz += 1.5 * .1 * cos(3. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .05 * sin(11. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .025 * cos(17. * p3.yzx + vTime);
+
 
   float warpsScale = 3.;
   vec3 color1 = vec3(1., vUv.y, vUv.x);
@@ -152,10 +117,7 @@ vec4 sdScene(vec3 p) {
 
 
   vec3 color2 = vec3(1., 1., 1.);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+
 
   vec3 color3 = vec3(.5, vUv.x, 1.);
   color3.xyz += warpsScale * .1 * sin(3. * color3.yzx + vTime);
@@ -180,30 +142,15 @@ vec4 sdScene(vec3 p) {
 
 
 
-  // p3 = opRep(p3, vec3( 1. + thing.x ,1. +thing.y, 0.));
-
-
-
- // p3.xy *= rot(vTime * .5);
- // p3.xz *= rot(vTime * .5);
- // p.xy *= rot(vTime * .5 * -1.);
 
   vec4 sphereLeft = sdSphere(p3 + displacement2 ,1.1 , vec3(0., 0, .0), color1 );
-  vec4 sphereRight = sdSphere(p3 + displacement4, 1., vec3(0., 0, 0.), color3);
-  vec4 sphereTop = sdSphere(p3 + displacement, .5, vec3(0., -1., -2), color3);
-  vec4 sphereBot = sdSphere(p3 + displacement, .5, vec3(0., 1., -2), color1);
+
   vec4 cube = sdBox(p3    , vec3(cos(vTime) * .5 + 1.2, .5, sin(vTime * .5) * .5 + 1.2) , color2 + displacement);
-  vec4 cube2 = sdBox(p3 + displacement   , vec3(.3, sin(vTime) *.5 + .5, 1. + sin(vTime) *.5 + .5) , color4 );
-  // vec4 co = mix(mix(sphereLeft, cube, sin(vTime* .8)), mix(sphereRight, cube, cos(vTime)), tan(vTime * .5));;
-  // co = sphereRight;
-   // co = minWithColor(co, sphereTop);
-   // co = minWithColor(co, sphereBot);
-   // co = closest object containing "signed distance" and color
-  // co = minWithColor(co, sdFloor(p, vec3(1, .5, 0)));
+
 
 
   float blah = mix(cube.r, sphereLeft.r, tan(vTime * .1));
-   // blah = smoothDifferenceSDF(blah, sphereLeft.r, .05);
+
   return vec4(blah, color2);
 }
 
@@ -243,12 +190,7 @@ void main( )
   vec2 uv = vUv -.5;
 
   vec3 backgroundColor = vec3(0.);
-  // backgroundColor.rb = brownConradyDistortion(vUv, sin(vTime * .5) * 2., cos(vTime * .5) * 2.);
-  //
-  // backgroundColor.rg = brownConradyDistortion(backgroundColor.rb, sin(vTime * .9) * 2., cos(vTime * .5) * 4.);
 
-  // backgroundColor.xyz += 4. * .1 * cos(3. * backgroundColor.yzx + vTime);
-  // backgroundColor.xyz += 4. * .05 * cos(11. * backgroundColor.yzx + vTime);
   vec3 lightPosition = vec3(2, 2, 7);
   vec3 col = vec3(0);
   vec3 ro = vec3(0, 0, 5); // ray origin that represents camera position

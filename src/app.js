@@ -31,12 +31,14 @@ const snippet = document.getElementById('snipp')
 
 const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7]
 
-let selected = Math.floor(Math.random() * fragArray.length )
+// let selected = Math.floor(Math.random() * fragArray.length )
+
+let selected = 2
 
 snippet.textContent = fragArray[selected]
 const points =[
   {
-    position: new THREE.Vector3(3.55, 0.3, -3.6),
+    position: new THREE.Vector3(3.55, 0.3, -6.6),
     element: document.querySelector('.point-0')
   }
 
@@ -240,13 +242,7 @@ gtlfLoader.load(
     })
     intersectsArr.push(left.children[0], left.children[1], right.children[0], right.children[1], displayScreen)
     displayScreen.needsUpdate = true
-    // console.log(left)
 
-
-
-
-    // display.material = new THREE.MeshPhongMaterial( {color: 'black'})
-    //
     displayScreen.material = shaderMaterial
 
 

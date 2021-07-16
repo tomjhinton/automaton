@@ -489,12 +489,9 @@ float scene(vec3 pos) {
 
 	float period = (sin(vTime*.005)*0.5+1.);
 	vec2 id = round(pos.xz/period);
-	// clamprepetition(pos.yz, 4. + sin(vTime * .05), 4.); // Keep the last float as an int not a decimal float
-  // pModPolar(pos.xy, 1. + sin(vTime * .5)*.5 + 1.);
-  // pModPolar(pos.yz, 2. + sin(vTime * .5)*.5 + 1.);
+
   vec3 pos2 = pos;
-  // pModPolar(pos.xz, 4. + sin(vTime * .5)*.5 + 1.);
-	//pos.xz *= rot(vTime*length(.5));
+  
 
   float t = vTime * .2;
   // You can also use classic perlin noise or simplex noise,
@@ -511,49 +508,34 @@ float scene(vec3 pos) {
   float angleX = sin(vUv.x * 3. + t) * 9.;
   float angleY = sin(vUv.y * 3. + t) * 6.;
   float angleZ = sin(vUv.x /vUv.y * 3. + t) * .6;
-  // pMod3(pos2, vec3(1. , 0., 0. ));
-  // pMod3(pos, vec3(1. , 0., 0. ));
-  //   pMod3(pos, vec3(3. , 3. + wiggly(vUv.x + vTime * .05, vUv.y + (vTime * .5) * .05, 2., .6, 1.5), 0. ));
+
   pos = rotateX(pos, angleX + wiggly(vUv.x + vTime * .05, vUv.y + (vTime * .5) * .05, 12., .6, 1.5));
   pos2 = rotateY(pos2, angleY);
-  // pos = rotateZ(pos, angleZ);
 
 
 
-	// pos.x+= sin(vTime);
-  // pos.xz *= rot(vTime*length(pos.x ));
-  // pos.z += sin(vTime * id.x);
-  // pos.y += sin(vTime * id.y);
-  // pos.x += cos(vTime * id.y);
+
   pos.xyz += 1. * .1 * cos(3. * pos.yzx + vTime);
     vec2 rote = rotateUV(vUv, vec2(.5), PI * vTime * .05);
-  // pos2.x+= cnoise(vUv * 20. );
-  // pos.xyz += 2. * .05 * cos(11. * pos.yzx + vTime);
+
 
   pos2.xyz += 1. * .025 * cos(17. * pos.yzx + vTime);
-  // pos.xyz += 1. * .0125 * cos(21. * pos.yzx + vTime);
+
 	float box = sdBox(pos2, vec3( .5));
   float box2 = sdBoxFrame(pos, vec3( 1.5), .2);
   float pyramid = sdPyramid(pos, 4.1 );
   float pyramid2 = sdPyramid(pos, 3.1 );
   float torus = sdTorus(pos2, vec2(1.9, .5));
   float blob = fBlob(pos2);
-  // float link = sdLink(pos2, 1.5, 1.5, 1.5);
+
   float link2 = sdLink(pos, .5, 1., .5);
   float octa=  sdOctahedron(pos2, 3.);
 
 
-	// return  mix(pyramid, box, wiggly(vUv.x + vTime * .05, vUv.y + (vTime * .5) * .005, 2., .6, 1.5));
-  // return mix(pyramid, fOpUnionChamfer(box, blob, sin(vTime)), .5);
-  // return mix(mix(blob, box,(sin(vTime * .55))), mix(torus, pyramid,(sin(vTime * .35))), sin(vTime));
-  // return mix(box, blob, sin(vTime));
-  // return mix(box2 , torus, sin(vTime));
-  //return mix(link, link2, sin(vTime));
-  // return link2 / blob;
-  // return smoothIntersectSDF(blob, octa, 1.05);
+
 
   return smoothUnionSDF(mix(link2, blob, sin(vTime)), mix(link2, blob, cos(vTime * .8)), .001 );
-  // return smoothDifferenceSDF(link2, octa, .05);
+
 }
 
 
@@ -579,39 +561,21 @@ vec4 raymarch(vec3 rayDir, vec3 pos) {
 	vec3 rayLength = vec3(0.0);
 	vec3 light = normalize(vec3(1.,sin(vTime),4.));
   vec2 uv = vUv - .5;
-	// vec3 gradient = mix(vec3(0.0, 0.0, sin(vTime)*.2), vec3(0.5, 0.0 ,0.5), rayDir.y);
+
   float warpsScale =  4. * sin(vTime) ;
   vec2 rote = rotateUV(uv, vec2(.5), PI * vTime * .05);
   vec2 roteC = rotateUV(uv, vec2(.5), -PI * vTime * .05);
 
-  // vec4 bgColor = vec4(vec3(stroke(cnoise(uv * 40. * uv.x * sin(vTime * uv.y)), .5, .5),
-	// stroke(cnoise(uv * 4. * uv.y * cos(vTime * uv.y)), wiggly(uv.x, uv.y, .5,.5,.5), .5),
-	// stroke(cnoise(uv * 30. * uv.y * sin(vTime * uv.x)), .5, .5)), 1.);
-  // vec4 bgColor = vec4(vec3(stroke(cnoise( rote * 40. * cnoise(roteC * 8. * uv.x)), .5, .5) ), 1.);
+
 
 
   vec4 bgColor = vec4(0., 0., 0., 1.);
 
-  // bgColor.xyz += warpsScale * .1 * cos(3. * bgColor.yzx + vTime);
-  // bgColor.xyz += warpsScale * .05 * cos(11. * bgColor.yzx + vTime);
-	// // vec4 bgColor = vec4(  1.);
-  // bgColor.xyz += warpsScale * .025 * cos(17. * bgColor.yzx + vTime);
-  // bgColor.xyz += warpsScale * .0125 * cos(21. * bgColor.yzx + vTime);
 
-  // pos.xyz += 1. * .1 * cos(3. * pos.yzx + vTime);
-  // pos.xyz += 1. * .05 * cos(11. * pos.yzx + vTime);
-  // pos.xyz += 1. * .025 * cos(17. * pos.yzx + vTime);
-  // pos.xyz += 1. * .0125 * cos(21. * pos.yzx + vTime);
   vec3 color1 = vec3(uv.x, uv.y, 1.);
-  // color1.xyz += warpsScale * .1 * cos(3. * color1.yzx + vTime);
-  // color1.xyz += warpsScale * .05 * cos(11. * color1.yzx + vTime);
-  // color1.xyz += warpsScale * .025 * cos(17. * color1.yzx + vTime);
-  // color1.xyz += warpsScale * .0125 * cos(21. * color1.yzx + vTime);
+
   vec3 color2 = vec3(0.);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+
 	// shooting the ray
  	for (int i=0; i < RAYMARCH_MAX_STEPS; i++) {
      	// steps traveled

@@ -1,24 +1,16 @@
+
 const float PI = 3.1415926535897932384626433832795;
 const float TAU = 2.* PI;
-uniform vec3 uColor;
-uniform vec3 uPosition;
-uniform vec3 uRotation;
+
+
 uniform vec2 uResolution;
-// uniform sampler2D uTexture;
-// uniform sampler2D uVideo;
-// uniform sampler2D uVideo2;
 uniform vec2 uMouse;
 
 
-varying float vDistort;
+
 varying vec2 vUv;
-varying float vElevation;
 varying float vTime;
-varying vec3 vNorm;
 
-precision highp float;
-
-#define PI 3.14159265359
 
 vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
 {
@@ -35,39 +27,14 @@ vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
     return uv;
 }
 
-float smoothIntersectSDF(float distA, float distB, float k )
-{
-  float h = clamp(0.5 - 0.5*(distA-distB)/k, 0., 1.);
-  return mix(distA, distB, h ) + k*h*(1.-h);
-}
 
-// float smoothUnionSDF(float distA, float distB, float k ) {
-//   float h = clamp(0.5 + 0.5*(distA-distB)/k, 0., 1.);
-//   return mix(distA, distB, h) - k*h*(1.-h);
-// }
-
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
 
 float smoothDifferenceSDF(float distA, float distB, float k) {
   float h = clamp(0.5 - 0.5*(distB+distA)/k, 0., 1.);
   return mix(distA, -distB, h ) + k*h*(1.-h);
 }
 
-vec4 smoothUnionSDF(vec4 a, vec4 b, float k )
-{
-  float h = clamp(0.5 + 0.5*(a.w-b.w)/k, 0., 1.);
-  vec3 c = mix(a.rgb,b.rgb,h);
-  float d = mix(a.w, b.w, h) - k*h*(1.-h);
 
-  return vec4(c,d);
-}
 
 vec4 sdSphere(vec3 p, float r, vec3 offset, vec3 col )
 {
@@ -82,52 +49,21 @@ vec4 sdBox(vec3 p, vec3 c, vec3 col) {
 
 
 
-vec4 sdFloor(vec3 p, vec3 col) {
-  float d = p.y + 1.;
-  return vec4(d, col);
-}
 
 vec4 minWithColor(vec4 obj1, vec4 obj2) {
   if (obj2.x < obj1.x) return obj2; // The x component of the object holds the "signed distance" value
   return obj1;
 }
 
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
 
 mat2 rot (float a) {
 	return mat2(cos(a),sin(a),-sin(a),cos(a));
 }
 
 
-vec4 intersectSDF(vec4 a, vec4 b) {
-    return a.w > b.w ? a : b;
-}
-
-vec4 unionSDF(vec4 a, vec4 b) {
-    return a.w < b.w? a : b;
-}
-
-vec4 differenceSDF(vec4 a, vec4 b) {
-    return a.w > -b.w? a : vec4(b.rgb,-b.w);
-}
-
 vec4 sdScene(vec3 p) {
-  // vec3 p2 = p;
     vec3 p3 = p;
-  // p.xyz += 1. * .1 * cos(3. * p.yzx + vTime);
-  // p.xyz += 1. * .05 * cos(11. * p.yzx + vTime);
-  // p.xyz += 1. * .025 * cos(17. * p.yzx + vTime);
-  // //
-  // p3.xyz += 1.5 * .1 * cos(3. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .05 * sin(11. * p3.yzx + vTime);
-  // p3.xyz += 1.5 * .025 * cos(17. * p3.yzx + vTime);
+
 
   float warpsScale = 3.;
   vec3 color1 = vec3(1., vUv.y, vUv.x);
@@ -138,10 +74,7 @@ vec4 sdScene(vec3 p) {
   color1.xyz += warpsScale * .0125 * cos(21. * color1.yzx + vTime);
 
   vec3 color2 = vec3(1., 1., 1.);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+
 
   vec3 color3 = vec3(.5, vUv.x, 1.);
   color3.xyz += warpsScale * .1 * sin(3. * color3.yzx + vTime);
@@ -172,11 +105,7 @@ vec4 sdScene(vec3 p) {
   vec4 cube = sdBox(p3 + displacement2   , vec3(1.) , color2 + displacement);
   vec4 cube2 = sdBox(p3   , vec3(.3, sin(vTime) *.5 + .5, 1. + sin(vTime) *.5 + .5) , color4 );
   vec4 co = mix(mix(sphereLeft, cube, sin(vTime* .8)), mix(sphereRight, cube, cos(vTime)), tan(vTime * .5));;
-  co = sphereRight;
-   // co = minWithColor(co, sphereTop);
-   // co = minWithColor(co, sphereBot);
-   // co = closest object containing "signed distance" and color
-  // co = minWithColor(co, sdFloor(p, vec3(1, .5, 0)));
+
   float blah = smoothDifferenceSDF(cube.r, sphereLeft.r, 0.5);
   return vec4(blah, cube.gba);
 }

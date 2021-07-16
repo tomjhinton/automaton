@@ -1,5 +1,8 @@
+
 const float PI = 3.1415926535897932384626433832795;
 const float TAU = 2.* PI;
+
+
 uniform vec3 uColor;
 uniform vec3 uPosition;
 uniform vec3 uRotation;
@@ -7,81 +10,9 @@ uniform vec2 uResolution;
 uniform vec2 uMouse;
 
 
-varying float vDistort;
 varying vec2 vUv;
-varying float vElevation;
 varying float vTime;
-varying vec3 vNorm;
 
-precision highp float;
-
-#define PI 3.14159265359
-
-vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
-{
-    uv = uv * 2.0 - 1.0;	// brown conrady takes [-1:1]
-
-    // positive values of K1 give barrel distortion, negative give pincushion
-    float r2 = uv.x*uv.x + uv.y*uv.y;
-    uv *= 1.0 + k1 * r2 + k2 * r2 * r2;
-
-    // tangential distortion (due to off center lens elements)
-    // is not modeled in this function, but if it was, the terms would go here
-
-    uv = (uv * .5 + .5);	// restore -> [0:1]
-    return uv;
-}
-
-float smoothIntersectSDF(float distA, float distB, float k )
-{
-  float h = clamp(0.5 - 0.5*(distA-distB)/k, 0., 1.);
-  return mix(distA, distB, h ) + k*h*(1.-h);
-}
-
-float smoothUnionSDF(float distA, float distB, float k ) {
-  float h = clamp(0.5 + 0.5*(distA-distB)/k, 0., 1.);
-  return mix(distA, distB, h) - k*h*(1.-h);
-}
-
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
-
-vec3 opTwist( in vec3 p )
-{
-    float k = sin(vTime) ; // or some other amount
-    float c = cos(k*p.y);
-    float s = sin(k*p.y);
-    mat2  m = mat2(c,-s,s,c);
-    vec3  q = vec3(m*p.xz,p.y);
-    return q;
-}
-
-
-float smoothDifferenceSDF(float distA, float distB, float k) {
-  float h = clamp(0.5 - 0.5*(distB+distA)/k, 0., 1.);
-  return mix(distA, -distB, h ) + k*h*(1.-h);
-}
-
-// vec4 smoothUnionSDF(vec4 a, vec4 b, float k )
-// {
-//   float h = clamp(0.5 + 0.5*(a.w-b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, b.w, h) - k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
-
-vec4 sdSphere(vec3 p, float r, vec3 offset, vec3 col )
-{
-  float d = length(p - offset) - r;
-  return vec4(d, col);
-}
 
 vec4 sdBox(vec3 p, vec3 c, vec3 col) {
   vec3 q = abs(p) - c;
@@ -89,69 +20,15 @@ vec4 sdBox(vec3 p, vec3 c, vec3 col) {
 }
 
 
-
-vec4 sdFloor(vec3 p, vec3 col) {
-  float d = p.y + 1.;
-  return vec4(d, col);
-}
-
 vec4 minWithColor(vec4 obj1, vec4 obj2) {
   if (obj2.x < obj1.x) return obj2; // The x component of the object holds the "signed distance" value
   return obj1;
 }
 
-// vec4 smoothDifferenceSDF(vec4 a, vec4 b, float k)
-// {
-//   float h = clamp(0.5 - 0.5*(a.w+b.w)/k, 0., 1.);
-//   vec3 c = mix(a.rgb,b.rgb,h);
-//   float d = mix(a.w, -b.w, h ) + k*h*(1.-h);
-//
-//   return vec4(c,d);
-// }
-
 mat2 rot (float a) {
 	return mat2(cos(a),sin(a),-sin(a),cos(a));
 }
 
-
-vec4 intersectSDF(vec4 a, vec4 b) {
-    return a.w > b.w ? a : b;
-}
-
-vec4 unionSDF(vec4 a, vec4 b) {
-    return a.w < b.w? a : b;
-}
-
-vec4 differenceSDF(vec4 a, vec4 b) {
-    return a.w > -b.w? a : vec4(b.rgb,-b.w);
-}
-
-// float opRep( in vec3 p, in vec3 c, in sdf3d primitive )
-// {
-//     vec3 q = mod(p+0.5*c,c)-0.5*c;
-//     return primitive( q );
-// }
-vec3 opRep( vec3 p, vec3 c ) {
-  float displacement = sin(9. * p.x + vTime * .5) * sin(3. * p.y + vTime) * sin(3. * p.z + vTime) * 0.25 ;
-    vec3 q = mod(p,c)-0.5*c;
-    return q * 1.;
-}
-
-vec3 opCheapBend(  in vec3 p )
-{
-    float k = 10. * sin(vTime); // or some other amount
-    float c = cos(k*p.x);
-    float s = sin(k*p.x);
-    mat2  m = mat2(c,-s,s,c);
-    vec3  q = vec3(m*p.xy,p.z);
-    return q;
-}
-
-vec4 sdLink( vec3 p, float le, float r1, float r2, vec3 color )
-{
-  vec3 q = vec3( p.x, max(abs(p.y)-le,0.0), p.z );
-  return vec4(length(vec2(length(q.xy)-r1,q.z)) - r2, color);
-}
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -263,7 +140,7 @@ float cnoise(vec3 P)
 
 
 vec4 sdScene(vec3 p) {
-    vec3 p3 = p;
+
 
   float warpsScale = 3.;
   vec3 color1 = vec3(1., vUv.y, vUv.x);
@@ -273,13 +150,12 @@ vec4 sdScene(vec3 p) {
   color1.xyz += warpsScale * .025 * cos(17. * color1.yzx + vTime);
   color1.xyz += warpsScale * .0125 * cos(21. * color1.yzx + vTime);
 
+  vec3 color2 = vec3(vUv.y, vUv.x, 0.);
+  color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
+  color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
+  color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
+  color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
 
-
-  vec3 color2 = vec3(1.);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
 
   vec3 color3 = vec3(.5, vUv.x,vUv.y);
   color3.xyz += warpsScale * .1 * sin(3. * color3.yzx + vTime);
@@ -287,36 +163,18 @@ vec4 sdScene(vec3 p) {
   color3.xyz += warpsScale * .025 * cos(17. * color3.yzx + vTime);
   color3.xyz += warpsScale * .0125 * cos(21. * color3.yzx + vTime);
 
-  vec3 color4 = vec3(vUv.y, vUv.x, 0.);
-  color4.xyz += warpsScale * .1 * sin(3. * color4.yzx + vTime);
-  color4.xyz += warpsScale * .05 * cos(11. * color4.yzx + vTime);
-  color4.xyz += warpsScale * .025 * cos(17. * color4.yzx + vTime);
-  color4.xyz += warpsScale * .0125 * cos(21. * color4.yzx + vTime);
 
-  
+  p.xy *= rot(vTime * .5);
+  p.xz *= rot(vTime * .5);
 
-  float displacement = sin(3. * p.x + vTime * .5 ) * sin(3. * p.y + vTime  ) * sin(3. * p.z + vTime) * 0.25 ;
+  vec4 cube = sdBox(p    , vec3(1., sin(vTime) * .5 + 1.51, 1.) , color1 );
+  vec4 cube2 = sdBox(p  , vec3( sin(vTime) * .5 + 1.51, 1., 1.) , color3 );
+  vec4 cube3 = sdBox(p  , vec3( 1., 1., sin(vTime) * .5 + 1.51) , color2 );
 
-  float displacement2 = cos(6.0 * p3.x + vTime) * sin(6.0 * p3.y + vTime) * sin(6.0 * p3.z + vTime) * 0.25 ;
-
-  float displacement3 = sin(9. * p.x + vTime * .5) * sin(9. * p.y + vTime) * sin(9. * p.z + vTime) * 0.25 ;
-
-  float displacement4 = cos(18.0 * p3.x + vTime) * sin(3.0 * p3.y + vTime) * sin(0.5 * p3.z + vTime)  ;
+  vec4 mixed = minWithColor(cube, cube2);
+  mixed = minWithColor(mixed, cube3);
 
 
-
- p3.xy *= rot(vTime * .5);
- p3.xz *= rot(vTime * .5);
-
-
-
-
-  vec4 cube = sdBox(p3    , vec3(1., sin(vTime) * .5 + 1.51, 1.) , color1 );
-  vec4 cube2 = sdBox(p3  , vec3( sin(vTime) * .5 + 1.51, 1., 1.) , color3 );
-  vec4 cube3 = sdBox(p3  , vec3( 1., 1., sin(vTime) * .5 + 1.51) , color4 );
-
-   vec4 mixed = minWithColor(cube, cube2);
-   mixed = minWithColor(mixed, cube3);
   return  mixed;
 }
 

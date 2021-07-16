@@ -1,24 +1,13 @@
+
 const float PI = 3.1415926535897932384626433832795;
 const float TAU = 2.* PI;
-uniform vec3 uColor;
-uniform vec3 uPosition;
-uniform vec3 uRotation;
+
 uniform vec2 uResolution;
-// uniform sampler2D uTexture;
-// uniform sampler2D uVideo;
-// uniform sampler2D uVideo2;
 uniform vec2 uMouse;
 
-
-varying float vDistort;
 varying vec2 vUv;
-varying float vElevation;
 varying float vTime;
-varying vec3 vNorm;
 
-precision highp float;
-
-#define PI 3.14159265359
 
 vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
 {
@@ -308,10 +297,7 @@ vec4 sdScene(vec3 p) {
 
 
   vec3 color2 = vec3(1., 1., .0);
-  // color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
-  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+
 
   vec3 color3 = vec3(.5, vUv.x,vUv.y);
   color3.xyz += warpsScale * .1 * sin(3. * color3.yzx + vTime);
@@ -335,25 +321,9 @@ vec4 sdScene(vec3 p) {
 
   float displacement4 = cos(18.0 * p3.x + vTime) * sin(3.0 * p3.y + vTime) * sin(0.5 * p3.z + vTime)  ;
 
-  // p3 = opRep(p3, vec3(0. ,4. , 0.));
-  // p3 = opTwist(p3, .1);
-  // p3 = opCheapBend(p3,sin(vTime));
 
-  // p3 += cnoise(p3 * 10.);
-
-
-
- //
- //p3.xy *= rot(displacement2);
- // p.x += 1.;
- // p3.xy *= rot(vTime * .5);
- //
  p.xy *= rot(vTime * .5) * -1.;
- // p3.xz *= rot(vTime * .5) * -1.;
- // p.xy *= rot(vTime * .5) * -1.;
- // p.xz *= rot(vTime * .5) * -1.;
 
- // p.xy *= rot(vTime * .5 * -1.);
 
   vec4 sphereLeft = sdSphere(p3 + displacement  ,1.8 , vec3(1., .0, .0), color1 );
   vec4 sphereRight = sdSphere(p3 + displacement , 1.8, vec3(0.,.0, 0.), color1);
@@ -362,48 +332,20 @@ vec4 sdScene(vec3 p) {
   vec4 cube = sdBox(vec3(p3.x, p3.y, p3.z)     , vec3(2., 2.5, 1.) , color4 );
   vec4 cube2 = sdBox(vec3(p3.x , p3.y , p3.z  ) + displacement  , vec3( 3., sin(vTime), 1.) , color4 );
   vec4 cube3 = sdBox(vec3(p.x, p.y , p.z  )  , vec3( .25, 4. + displacement2, 1.) , color4);
-  // vec4 co = mix(mix(sphereLeft, cube, sin(vTime* .8)), mix(sphereRight, cube, cos(vTime)), tan(vTime * .5));;
-  // co = sphereRight;
-   // co = minWithColor(co, sphereTop);
-   // co = minWithColor(co, sphereBot);
-   // co = closest object containing "signed distance" and color
-  // co = minWithColor(co, sdFloor(p, vec3(1, .5, 0)));
+
   vec4 link = sdLink(p  , 2., 4., .4   , color1);
   vec4 link2 = sdLink(p3 , 1.8, .8, .2 , color3);
   vec4 link3 = sdLink(p3, 1.6, .6, .2 , color4 );
   vec4 link4 = sdLink(p3  , 1.4, .4, .2   , color1);
   vec4 link5 = sdLink(p3 , 1.2, .2, .2 , color3);
   vec4 link6 = sdLink(p3, 1., .0, .2 , color4 );
+
   coswarp(color1.rgb, 3.);
-  // coswarp(link2.gba, 4.);
-  // coswarp(link3.gba, 2.);
-  // coswarp(link4.gba, 3.);
-  // coswarp(link5.gba, 4.);
-  // coswarp(link6.gba, 2.);
-  // vec4 hmm = smoothUnionSDF(link, link2, .005);
-  // float blah = mix(link, link2, sin(vTime * .5) * .5 +1.);
+
    float blah = smoothDifferenceSDF(cube.r, cube2.r, .9 );
    blah = smoothDifferenceSDF(blah, cube3.r, .9 );
    vec4 mixed =  vec4(blah, color1);
-   // mixed = minWithColor(mixed, link3);
-   //  mixed = minWithColor(mixed, link4);
-   //    mixed = minWithColor(mixed, link5);
-   //      mixed = minWithColor(mixed, link6);
 
-        // coswarp(mixed.rgb, displacement);
-      // mixed = minWithColor(mixed, cube2);
-      //   mixed = minWithColor(mixed, cube3);
-   // mixed = minWithColor(mixed, sphereRight);
-   // uvRipple(mixed.gb, sin(vTime) );
-    // mixed.rb = brownConradyDistortion(mixed.rb, 2. , -2. );
-    //   mixed.gb = brownConradyDistortion(mixed.gb, -2. , 2. );
-   // mixed.xyz += 5. * .1 * cos(3. * mixed.yzx + (vTime * .1));
-   // mixed.xyz += 4. * .05 * cos(11. * mixed.yzx + (vTime * .1));
-   // mixed.xyz += 3. * .025 * cos(17. * mixed.yzx + (vTime * .1));
-
-
-   // mixed.xyz += 5. * .0125 * cos(21. * mixed.yzx + (vTime * .1));
-   // mixed += displacement;
   return  mixed;
 }
 
@@ -445,20 +387,9 @@ void main( )
    uv2 = fract(uv2);
   vec3 backgroundColor = vec3(1.);
 
-  // backgroundColor.gb = brownConradyDistortion(uv2, sin(vTime * .5) * 20., cos(vTime * .5) * 20.);
 
-  // backgroundColor.gb = brownConradyDistortion(backgroundColor.rb, sin(vTime * .9) * 2., cos(vTime * .5) * 2.);
-  // backgroundColor = opCheapBend(backgroundColor);
-  //
-  //
-  //
-  // backgroundColor.xyz += 8. * .1 * cos(3. * backgroundColor.yzx + vTime * .5) ;
-  // backgroundColor = opCheapBend(backgroundColor);
   backgroundColor = opTwist(backgroundColor, .1);
-  // backgroundColor.xyz += 8. * .05 * cos(11. * backgroundColor.yzx + vTime);
 
-
-  // backgroundColor += displacement;
   vec3 lightPosition = vec3(2, 2, 7);
   vec3 col = vec3(0);
   vec3 ro = vec3(0.,0., 7.5 ); // ray origin that represents camera position
