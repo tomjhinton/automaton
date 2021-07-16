@@ -4,20 +4,15 @@ uniform vec3 uColor;
 uniform vec3 uPosition;
 uniform vec3 uRotation;
 uniform vec2 uResolution;
-uniform sampler2D uTexture;
-uniform sampler2D uVideo;
-uniform sampler2D uVideo2;
 uniform vec2 uMouse;
 
 
-varying float vDistort;
+
 varying vec2 vUv;
-varying float vElevation;
+
 varying float vTime;
 
-precision highp float;
 
-#define PI 3.14159265359
 
 float stroke(float x, float s, float w){
   float d = step(s,x + w * .5) -
@@ -134,6 +129,7 @@ float sdTorus( vec3 p, vec2 t )
 }
 
 #define PHI (pow(5.,0.5)*0.5 + 0.5)
+
 float fBlob(vec3 p) {
 	p = abs(p);
 	if (p.x < max(p.y, p.z)) p = p.yzx;
@@ -152,18 +148,10 @@ float scene(vec3 pos) {
 	pos.xz *= rot(PI/4.);
 
 	float period = 2.*(sin(vTime*.5)*0.5+1.);
-	vec2 id = round(pos.xz/period);
-	//clamprepetition(pos.yz, sin(vTime), 0.); // Keep the last float as an int not a decimal float
-	// pos.xz *= rot(vTime*length(id +.2));
-	// pos.x+= sin(vTime);
-  // pos.yz *= rot(vTime*length(id +.2));
-  // pos.z += sin(vTime * id.x);
-  // pos.y += sin(vTime * id.y);
-  // pos.x += cos(vTime * id.y);
+
+
   pos.xyz += 4. * .1 * cos(3. * pos.yzx + vTime);
-  // pos.xyz += 2. * .05 * cos(11. * pos.yzx + vTime);
-  // pos.xyz += 1. * .025 * cos(17. * pos.yzx + vTime);
-  // pos.xyz += 1. * .0125 * cos(21. * pos.yzx + vTime);
+
 	float box = sdBoxFrame(pos, vec3( 1. ),3. * (sin(vTime * .8) * .5 + 1.2));
   float pyramid = sdPyramid(pos, 10.1 );
   float pyramid2 = sdPyramid(pos, 3.1 );
@@ -171,7 +159,7 @@ float scene(vec3 pos) {
   float blob = fBlob(pos);
 
 
-	// return  mix(box, torus, wiggly(vUv.x + vTime * .05, vUv.y + (vTime * .5) * .5, 2., .6, 1.5));
+
   return blob;
 }
 

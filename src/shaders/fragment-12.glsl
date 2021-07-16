@@ -152,7 +152,7 @@ float scene(vec3 pos) {
 	pos.xz *= rot(PI/4.);
 
 	float period = 2.*(sin(vTime*.5)*0.5+1.);
-	vec2 id = round(pos.xz/period);
+	// vec2 id = round(pos.xz/period);
 	//clamprepetition(pos.yz, sin(vTime), 0.); // Keep the last float as an int not a decimal float
 	// pos.xz *= rot(vTime*length(id +.2));
 	// pos.x+= sin(vTime);
