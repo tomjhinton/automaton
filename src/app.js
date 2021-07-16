@@ -9,6 +9,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import Prism from 'prismjs'
 
+import * as Tone from 'tone'
+
 import vertexShader from './shaders/vertex.glsl'
 
 import fragmentShader1 from './shaders/fragment-1.glsl'
@@ -25,15 +27,29 @@ import fragmentShader6 from './shaders/fragment-6.glsl'
 
 import fragmentShader7 from './shaders/fragment-7.glsl'
 
+import fragmentShader8 from './shaders/fragment-8.glsl'
+
+import fragmentShader9 from './shaders/fragment-9.glsl'
+
+import fragmentShader10 from './shaders/fragment-10.glsl'
+
+import fragmentShader11 from './shaders/fragment-11.glsl'
+
+import fragmentShader12 from './shaders/fragment-12.glsl'
+
+import fragmentShader13 from './shaders/fragment-13.glsl'
+
+import fragmentShader14 from './shaders/fragment-14.glsl'
+
 const snippet = document.getElementById('snipp')
 
 
 
-const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7]
+const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7, fragmentShader8, fragmentShader9, fragmentShader10, fragmentShader11, fragmentShader12, fragmentShader13, fragmentShader14]
 
 // let selected = Math.floor(Math.random() * fragArray.length )
 
-let selected = 2
+let selected = fragArray.length -1
 
 snippet.textContent = fragArray[selected]
 const points =[
@@ -47,18 +63,33 @@ console.log(Prism)
 Prism.highlightAll()
 document.onkeydown = checkKey
 
+
+
 function resetL(){
-  gsap.to(left.position, { duration: .5, y: left.position.y + 0.005, delay: 0 })
+  gsap.to(left.position, { duration: .5, y: left.position.y + 0.005, delay: 0, onComplete: buttonStill  })
 }
 
 function resetR(){
-  gsap.to(right.position, { duration: .5, y: right.position.y + 0.005, delay: 0 })
+  gsap.to(right.position, { duration: .5, y: right.position.y + 0.005, delay: 0, onComplete: buttonStill })
 }
 
+
+function buttonStill(){
+  buttonMoving = false
+}
+
+const synth =  new Tone.FMSynth().toDestination();
+
+let buttonMoving = false
+
 function scrollLeft(){
+  synth.triggerAttackRelease("C4", "8n");
   snippet.textContent = fragArray[selected]
   Prism.highlightAll()
-  gsap.to(left.position, { duration: .5, y: left.position.y - 0.005, delay: 0, onComplete: resetL })
+  if(!buttonMoving){
+    buttonMoving = true
+    gsap.to(left.position, { duration: .5, y: left.position.y - 0.005, delay: 0, onComplete: resetL })
+  }
   // left.position.y -=.001
   if(selected > 0){
     selected --
@@ -74,10 +105,13 @@ function scrollLeft(){
 }
 
 function scrollRight(){
+  synth.triggerAttackRelease("E4", "8n");
   snippet.textContent = fragArray[selected]
   Prism.highlightAll()
-
-  gsap.to(right.position, { duration: .5, y: right.position.y - 0.005, delay: 0, onComplete: resetR })
+  if(!buttonMoving){
+    buttonMoving = true
+    gsap.to(right.position, { duration: .5, y: right.position.y - 0.005, delay: 0, onComplete: resetR })
+  }
   if(selected < fragArray.length -1){
     selected ++
     shaderMaterial.needsUpdate=true
