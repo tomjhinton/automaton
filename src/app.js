@@ -56,9 +56,14 @@ const points =[
   {
     position: new THREE.Vector3(3.55, 0.3, -6.6),
     element: document.querySelector('.point-0')
+  },
+  {
+    position: new THREE.Vector3(3.55, -2.3, -6.6),
+    element: document.querySelector('.point-1')
   }
 
 ]
+
 console.log(Prism)
 Prism.highlightAll()
 document.onkeydown = checkKey
@@ -83,7 +88,7 @@ const synth =  new Tone.FMSynth().toDestination();
 let buttonMoving = false
 
 function scrollLeft(){
-  synth.triggerAttackRelease("C4", "8n");
+  // synth.triggerAttackRelease("C4", "8n");
   snippet.textContent = fragArray[selected]
   Prism.highlightAll()
   if(!buttonMoving){
@@ -105,7 +110,7 @@ function scrollLeft(){
 }
 
 function scrollRight(){
-  synth.triggerAttackRelease("E4", "8n");
+  // synth.triggerAttackRelease("E4", "8n");
   snippet.textContent = fragArray[selected]
   Prism.highlightAll()
   if(!buttonMoving){
@@ -151,6 +156,12 @@ function checkKey(e) {
 }
 
 var modal = document.getElementById('myModal')
+
+var refresh = document.getElementById('refresh')
+
+refresh.onclick = function(){
+  scrollLeft()
+}
 
 // Get the button that opens the modal
 var btn = document.getElementById('myBtn')
@@ -362,7 +373,7 @@ function onClick() {
     // console.log( 'Intersection:', intersects[0].object.parent.name );
 
     if(intersects[0].object.parent.name === 'Left'){
-      scrollLeft()
+      scrollRight()
     }
     if(intersects[0].object.parent.name === 'Right'){
       scrollRight()
