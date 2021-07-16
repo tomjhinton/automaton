@@ -13,6 +13,7 @@ varying vec2 vUv;
 varying float vElevation;
 varying float vTime;
 
+const int circlesArrLength = 1;
 void pMod2(inout vec2 p, vec2 size){
   p = mod(p, size) -size * .005 ;
 }
@@ -358,7 +359,7 @@ float scale = 5. ;
 vec2 mouse = uMouse;
 vec2 bulge = vec2(0.);
 float d = 0.;
-int circlesArrLength = 1;
+
 vec3 circle = vec3 (.5,.5, .5 +  wiggly(roteC.x + vTime * .05, roteC.y + vTime * .005, 2., 6. , .05  ) );
 
 // uv.x += stroke(cnoise(rote * 10.), .5,.5);

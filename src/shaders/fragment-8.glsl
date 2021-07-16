@@ -434,7 +434,7 @@ float scene(vec3 pos) {
 	pos.xz *= rot(PI/4.);
 
 	float period = 2.*(sin(vTime*.5)*0.5+1.);
-	// vec2 id = round(pos.xz/period);
+	
 	// clamprepetition(pos.yz, 4. + sin(vTime * .05), 4.); // Keep the last float as an int not a decimal float
   // pModPolar(pos.xy, 1. + sin(vTime * .5)*.5 + 1.);
   // pModPolar(pos.yz, 2. + sin(vTime * .5)*.5 + 1.);

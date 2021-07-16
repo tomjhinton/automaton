@@ -17,19 +17,19 @@ void pMod2(inout vec2 p, vec2 size){
   p = mod(p, size) -size * .005 ;
 }
 
-
-float pModPolar(inout vec2 p, float repetitions) {
-    float angle = 2.*PI/repetitions;
-    float a = atan(p.y, p.x) + angle/2.;
-    float r = length(p);
-    float c = floor(a/angle);
-    a = mod(a,angle) - angle/2.;
-    p = vec2(cos(a), sin(a))*r;
-    // For an odd number of repetitions, fix cell index of the cell in -x direction
-    // (cell index would be e.g. -5 and 5 in the two halves of the cell):
-    if (abs(c) >= (repetitions/2.)) c = abs(c);
-    return c;
-}
+// 
+// float pModPolar(inout vec2 p, float repetitions) {
+//     float angle = 2.*PI/repetitions;
+//     float a = atan(p.y, p.x) + angle/2.;
+//     float r = length(p);
+//     float c = floor(a/angle);
+//     a = mod(a,angle) - angle/2.;
+//     p = vec2(cos(a), sin(a))*r;
+//     // For an odd number of repetitions, fix cell index of the cell in -x direction
+//     // (cell index would be e.g. -5 and 5 in the two halves of the cell):
+//     if (abs(c) >= (repetitions/2.)) c = abs(c);
+//     return c;
+// }
 
 //	Classic Perlin 2D Noise
 //	by Stefan Gustavson
@@ -372,7 +372,7 @@ void main() {
 
                                                                                     uv = mix(rote * scale, bulge, d);
                                                                                   uv.y += t * .05;
-                                                                                  vec2 gv = fract(uv) - .5;
+                                                                                  // vec2 gv = fract(uv) - .5;
                                                                                  vec2 id = floor(uv ) ;
                                                                                  // uvRipple(id, .05);
                                                                                  // id = brownConradyDistortion(id, -10., -1.);

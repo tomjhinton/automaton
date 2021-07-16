@@ -488,7 +488,7 @@ float scene(vec3 pos) {
 	pos.xz *= rot(PI/4.);
 
 	float period = (sin(vTime*.005)*0.5+1.);
-	// vec2 id = round(pos.xz/period);
+
 
   vec3 pos2 = pos;
 
