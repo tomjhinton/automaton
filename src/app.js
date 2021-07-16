@@ -151,6 +151,10 @@ function checkKey(e) {
 
     scrollRight()
 
+  } else if (e.keyCode === 27) {
+  // esc
+  // console.log(selected)
+    modal.style.display = 'none'
   }
 
 }
