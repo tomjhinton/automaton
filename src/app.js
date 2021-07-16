@@ -160,7 +160,7 @@ var modal = document.getElementById('myModal')
 var refresh = document.getElementById('refresh')
 
 refresh.onclick = function(){
-  scrollLeft()
+  scrollRight()
 }
 
 // Get the button that opens the modal
