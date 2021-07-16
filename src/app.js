@@ -41,15 +41,28 @@ import fragmentShader13 from './shaders/fragment-13.glsl'
 
 import fragmentShader14 from './shaders/fragment-14.glsl'
 
+import fragmentShader15 from './shaders/fragment-15.glsl'
+
+import fragmentShader16 from './shaders/fragment-16.glsl'
+
+import fragmentShader17 from './shaders/fragment-17.glsl'
+
+import fragmentShader18 from './shaders/fragment-18.glsl'
+
+import fragmentShader19 from './shaders/fragment-19.glsl'
+
+import fragmentShader20 from './shaders/fragment-20.glsl'
+
+
 const snippet = document.getElementById('snipp')
 
 
 
-const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7, fragmentShader8, fragmentShader9, fragmentShader10, fragmentShader11, fragmentShader12, fragmentShader13, fragmentShader14]
+const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7, fragmentShader8, fragmentShader9, fragmentShader10, fragmentShader11, fragmentShader12, fragmentShader13, fragmentShader14, fragmentShader15, fragmentShader16, fragmentShader17, fragmentShader18, fragmentShader19, fragmentShader20]
 
 // let selected = Math.floor(Math.random() * fragArray.length )
 
-let selected = fragArray.length -1
+let selected = 12
 
 snippet.textContent = fragArray[selected]
 const points =[

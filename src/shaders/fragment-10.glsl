@@ -5,6 +5,8 @@ uniform vec3 uPosition;
 uniform vec3 uRotation;
 uniform vec2 uResolution;
 uniform sampler2D uTexture;
+uniform sampler2D uVideo;
+uniform sampler2D uVideo2;
 uniform vec2 uMouse;
 
 
@@ -13,23 +15,17 @@ varying vec2 vUv;
 varying float vElevation;
 varying float vTime;
 
-void pMod2(inout vec2 p, vec2 size){
-  p = mod(p, size) -size * .005 ;
-}
+precision highp float;
 
-// 
-// float pModPolar(inout vec2 p, float repetitions) {
-//     float angle = 2.*PI/repetitions;
-//     float a = atan(p.y, p.x) + angle/2.;
-//     float r = length(p);
-//     float c = floor(a/angle);
-//     a = mod(a,angle) - angle/2.;
-//     p = vec2(cos(a), sin(a))*r;
-//     // For an odd number of repetitions, fix cell index of the cell in -x direction
-//     // (cell index would be e.g. -5 and 5 in the two halves of the cell):
-//     if (abs(c) >= (repetitions/2.)) c = abs(c);
-//     return c;
-// }
+#define PI 3.14159265359
+
+float stroke(float x, float s, float w){
+  float d = step(s,x + w * .5) -
+  step(s, x-w *.5);
+
+
+  return clamp(d, 0., 1.);
+}
 
 //	Classic Perlin 2D Noise
 //	by Stefan Gustavson
@@ -75,6 +71,18 @@ float cnoise(vec2 P){
   return 2.3 * n_xy;
 }
 
+
+const int RAYMARCH_MAX_STEPS = 200;
+const float RAYMARCH_MAX_DIST = 50.;
+const float EPSILON = 0.0001;
+
+// pos period of repition and limit
+#define clamprepetition(p,per,l) p=p-per*clamp(round(p/per), -l, l)
+
+mat2 rot (float a) {
+	return mat2(cos(a),sin(a),-sin(a),cos(a));
+}
+
 float wiggly(float cx, float cy, float amplitude, float frequency, float spread){
 
   float w = sin(cx * amplitude * frequency * PI) * cos(cy * amplitude * frequency * PI) * spread;
@@ -82,42 +90,99 @@ float wiggly(float cx, float cy, float amplitude, float frequency, float spread)
   return w;
 }
 
-vec3 shape( in vec2 p, in int sides )
+// p: position c: corner
+float sdBox(vec3 p, vec3 c) {
+  vec3 q = abs(p) - c;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+float sdBoxFrame( vec3 p, vec3 b, float e )
 {
-  float slowTime = vTime * .05;
-  float d = 0.0;
-  vec2 st = p *2.-1.;
-
-  // Number of sides of your shape
-  int N = sides ;
-
-  // Angle and radius from the current pixel
-  float a = atan(st.x,st.y)+PI ;
-  float r = (2.* PI)/float(N) ;
-
-  // Shaping function that modulate the distance
-  d = cos(floor(.5+a/r)*r-a)*length(st);
-
-
-
-
-  return  vec3(1.0-smoothstep(.4,.81,d));
+  p = abs(p  )-b;
+  vec3 q = abs(p+e)-e;
+  return min(min(
+      length(max(vec3(p.x,q.y,q.z),0.0))+min(max(p.x,max(q.y,q.z)),0.0),
+      length(max(vec3(q.x,p.y,q.z),0.0))+min(max(q.x,max(p.y,q.z)),0.0)),
+      length(max(vec3(q.x,q.y,p.z),0.0))+min(max(q.x,max(q.y,p.z)),0.0));
 }
 
-float triangleDF(vec2 uv){
-  uv =(uv * 2. -1.) * 2.;
-  return max(
-    abs(uv.x) * 0.866025 + uv.y * 0.5 ,
-     -1. * uv.y * 0.5);
+float sdPyramid( vec3 p, float h)
+{
+  float m2 = h*h + 0.25;
+
+  p.xz = abs(p.xz);
+  p.xz = (p.z>p.x) ? p.zx : p.xz;
+  p.xz -= 0.5;
+
+  vec3 q = vec3( p.z, h*p.y - 0.5*p.x, h*p.x + 0.5*p.y);
+
+  float s = max(-q.x,0.0);
+  float t = clamp( (q.y-0.5*p.z)/(m2+0.25), 0.0, 1.0 );
+
+  float a = m2*(q.x+s)*(q.x+s) + q.y*q.y;
+  float b = m2*(q.x+0.5*t)*(q.x+0.5*t) + (q.y-m2*t)*(q.y-m2*t);
+
+  float d2 = min(q.y,-q.x*m2-q.y*0.5) > 0.0 ? 0.0 : min(a,b);
+
+  return sqrt( (d2+q.z*q.z)/m2 ) * sign(max(q.z,-p.y));
 }
 
-float rectSDF(vec2 uv, vec2 s){
-  uv = uv * 2. -1.;
-  return max(
-     abs(uv.x/s.x),
-     abs(uv.y/s.y));
+float sdTorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
 }
 
+#define PHI (pow(5.,0.5)*0.5 + 0.5)
+float fBlob(vec3 p) {
+	p = abs(p);
+	if (p.x < max(p.y, p.z)) p = p.yzx;
+	if (p.x < max(p.y, p.z)) p = p.yzx;
+	float b = max(max(max(
+		dot(p, normalize(vec3(1, 1, 1))),
+		dot(p.xz, normalize(vec2(PHI+1., 1)))),
+		dot(p.yx, normalize(vec2(1, PHI)))),
+		dot(p.xz, normalize(vec2(1, PHI))));
+	float l = length(p);
+	return l - 1.5 - 0.2 * (1.5 / 2.)* cos(min(sqrt(1.01 - b / l)*(PI / 0.5), PI))  *( 20. * sin (vTime)) ;
+}
+
+float scene(vec3 pos) {
+	pos.yz *= rot(atan(1./sqrt(2.)));
+	pos.xz *= rot(PI/4.);
+
+	float period = 2.*(sin(vTime*.5)*0.5+1.);
+	// vec2 id = round(pos.xz/period);
+	//clamprepetition(pos.yz, sin(vTime), 0.); // Keep the last float as an int not a decimal float
+	// pos.xz *= rot(vTime*length(id +.2));
+	// pos.x+= sin(vTime);
+  // pos.yz *= rot(vTime*length(id +.2));
+  // pos.z += sin(vTime * id.x);
+  // pos.y += sin(vTime * id.y);
+  // pos.x += cos(vTime * id.y);
+  pos.xyz += 2. * .1 * cos(3. * pos.yzx + vTime);
+  // pos.xyz += 2. * .05 * cos(11. * pos.yzx + vTime);
+  // pos.xyz += 1. * .025 * cos(17. * pos.yzx + vTime);
+  // pos.xyz += 1. * .0125 * cos(21. * pos.yzx + vTime);
+	float box = sdBoxFrame(pos, vec3( 1. ),3. * (sin(vTime * .8) * .5 + 1.2));
+  float pyramid = sdPyramid(pos, 10.1 );
+  float pyramid2 = sdPyramid(pos, 3.1 );
+  float torus = sdTorus(pos, vec2(.9, .1));
+  float blob = fBlob(pos);
+
+
+	// return  mix(box, torus, wiggly(vUv.x + vTime * .05, vUv.y + (vTime * .5) * .5, 2., .6, 1.5));
+  return blob;
+}
+
+vec3 getnormalsmall (vec3 p)
+{
+		vec2 epsilon = vec2(0.001, 0.);
+		return normalize(scene(p) - vec3(scene(p-epsilon.xyy),
+										   scene(p-epsilon.yxy),
+										   scene(p-epsilon.yyx))
+						);
+}
 vec2 rotateUV(vec2 uv, vec2 pivot, float rotation) {
   mat2 rotation_matrix=mat2(  vec2(sin(rotation),-cos(rotation)),
                               vec2(cos(rotation),sin(rotation))
@@ -128,273 +193,80 @@ vec2 rotateUV(vec2 uv, vec2 pivot, float rotation) {
   return uv;
 }
 
-float stroke(float x, float s, float w){
-  float d = step(s,x + w * .5) -
-  step(s, x-w *.5);
+
+vec4 raymarch(vec3 rayDir, vec3 pos) {
+	// Define the start state
+	// reset to 0 steps
+	float currentDist = 0.0; // signed distance
+	float rayDepth = 0.0;
+	vec3 rayLength = vec3(0.0);
+	vec3 light = normalize(vec3(1.,sin(vTime),2.));
+  vec2 uv = vUv;
+	vec3 gradient = mix(vec3(0.0, 0.0, sin(vTime)*.2), vec3(0.5, 0.0 ,0.5), rayDir.y);
+  float warpsScale =  1. ;
+  vec2 rote = rotateUV(uv, vec2(.5), PI * vTime * .05);
+  vec2 roteC = rotateUV(uv, vec2(.5), -PI * vTime * .05);
+
+  // vec4 bgColor = vec4(vec3(stroke(cnoise(uv * 40. * uv.x * sin(vTime * uv.y)), .5, .5),
+	// stroke(cnoise(uv * 4. * uv.y * cos(vTime * uv.y)), wiggly(uv.x, uv.y, .5,.5,.5), .5),
+	// stroke(cnoise(uv * 30. * uv.y * sin(vTime * uv.x)), .5, .5)), 1.);
+  // vec4 bgColor = vec4(vec3(stroke(cnoise( rote * 40. * cnoise(roteC * 80. * uv.x)), .5, .1) ), 1.);
+
+  vec4 bgColor = vec4(1.);
+
+  // bgColor.xyz += warpsScale * .1 * cos(3. * bgColor.yzx + vTime);
+  // bgColor.xyz += warpsScale * .05 * cos(11. * bgColor.yzx + vTime);
+	// // vec4 bgColor = vec4(  1.);
+  // bgColor.xyz += warpsScale * .025 * cos(17. * bgColor.yzx + vTime);
+  // bgColor.xyz += warpsScale * .0125 * cos(21. * bgColor.yzx + vTime);
+
+  // pos.xyz += 3. * .1 * cos(3. * pos.yzx + vTime);
+  // pos.xyz += 1. * .05 * cos(11. * pos.yzx + vTime);
+  // pos.xyz += 1. * .025 * cos(17. * pos.yzx + vTime);
+  // pos.xyz += 1. * .0125 * cos(21. * pos.yzx + vTime);
+  vec3 color1 = vec3(uv.y, uv.x, cos(vTime) * .5 + 1.);
+  color1.xyz += warpsScale * .1 * cos(3. * color1.yzx + vTime);
+  // color1.xyz += warpsScale * .05 * cos(11. * color1.yzx + vTime);
+  // color1.xyz += warpsScale * .025 * cos(17. * color1.yzx + vTime);
+  // color1.xyz += warpsScale * .0125 * cos(21. * color1.yzx + vTime);
+  vec3 color2 = vec3(sin(vTime) * .5 + 1., uv.x, uv.y);
+  color2.xyz += warpsScale * .1 * sin(3. * color2.yzx + vTime);
+  // color2.xyz += warpsScale * .05 * cos(11. * color2.yzx + vTime);
+  // color2.xyz += warpsScale * .025 * cos(17. * color2.yzx + vTime);
+  // color2.xyz += warpsScale * .0125 * cos(21. * color2.yzx + vTime);
+	// shooting the ray
+ 	for (int i=0; i < RAYMARCH_MAX_STEPS; i++) {
+     	// steps traveled
+		vec3 new_p = pos + rayDir * rayDepth;
+		currentDist = scene(new_p);
+		rayDepth += currentDist;
+
+		vec3 normals = getnormalsmall(new_p);
+		float lighting = max(0.,dot(normals,light));
 
 
-  return clamp(d, 0., 1.);
-}
-vec3 bridge(vec3 c, float d, float s, float w){
-  c*= 1. -stroke(d,s,w*2.);
-  return c + stroke(d,s,w);
-}
 
-float flip(float v, float pct){
-  return mix(v, 1.-v, pct);
-}
-
-float fill(float x,float size){
-  return 1. -step(size,x);
-}
-
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
-
-float snoise(vec2 v) {
-    const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                        0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                        -0.577350269189626,  // -1.0 + 2.0 * C.x
-                        0.024390243902439); // 1.0 / 41.0
-    vec2 i  = floor(v + dot(v, C.yy) );
-    vec2 x0 = v -   i + dot(i, C.xx);
-    vec2 i1;
-    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-    vec4 x12 = x0.xyxy + C.xxzz;
-    x12.xy -= i1;
-    i = mod289(i); // Avoid truncation effects in permutation
-    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-        + i.x + vec3(0.0, i1.x, 1.0 ));
-
-    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-    m = m*m ;
-    m = m*m ;
-    vec3 x = 2.0 * fract(p * C.www) - 1.0;
-    vec3 h = abs(x) - 0.5;
-    vec3 ox = floor(x + 0.5);
-    vec3 a0 = x - ox;
-    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-    vec3 g;
-    g.x  = a0.x  * x0.x  + h.x  * x0.y;
-    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-    return 130.0 * dot(m, g);
-}
-
-float spiralSDF(vec2 st, float t){
-  st -= .5;
-  float r = dot(st, st);
-  float a = atan(st.y, st.x);
-  return abs(sin(fract(log(r)*t+a*0.159)));
-}
-
-void spin(inout vec2 p, float axis){
-  p.x += sin(vTime *.5) *axis;
-  p.y += cos(vTime *.5) *axis;
-}
-
-void spinC(inout vec2 p, float axis){
-  p.x -= sin(vTime *.5) *axis;
-  p.y -= cos(vTime *.5) *axis;
-}
-void uvX(inout vec2 p, float axis){
-  p.x -= sin(vTime *.5) *axis;
-
-}
-
-void uvRipple(inout vec2 uv, float intensity){
-
-	vec2 p =-1.+2.*gl_FragCoord.xy / uResolution.xy-vec2(0,-.001);
+ 		vec4 shapeColor = mix(
+			vec4(color1, 1.),
+			vec4(color2, 1.),
+			lighting
+		);
 
 
-    float cLength=length(p);
+ 	    if (currentDist < EPSILON) return shapeColor; // We're inside the scene - magic happens here
+ 		if (rayDepth > RAYMARCH_MAX_DIST) return bgColor; // We've gone too far
+	}
 
-     uv= uv +(p/cLength)*cos(cLength*15.0-vTime*1.0)*intensity;
-
-}
-
-void uvRippleStatic(inout vec2 uv, float intensity){
-
-	vec2 p =-1.+2.*gl_FragCoord.xy / uResolution.xy-vec2(0,-.001);
-
-
-    float cLength=length(p);
-
-     uv= uv +(p/cLength)*cos(cLength*15.0)*intensity;
-
-}
-
-float sphereSDF(vec3 p) {
-    return length(p) - 1.0;
-}
-
-float raysSDF(vec2 uv, float N){
-  uv -=.5;
-  return fract(atan(uv.y, uv.x)/TAU * float(N));
-}
-
-float polySDF(vec2 uv, float sides){
-  uv = uv * 2. - 1.;
-  float a = atan(uv.x,uv.y) + PI;
-  float r = length(uv);
-  float v = TAU /sides;
-  return cos(floor(.5+a/v) * v - a) * r;
-}
-
-vec2 random2(vec2 st){
-    st = vec2( dot(st,vec2(127.1,311.7)),
-              dot(st,vec2(269.5,183.3)) );
-    return -1.0 + 2.0*fract(sin(st)*43758.5453123);
-}
-
-float noise(vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    vec2 u = f*f*(3.0-2.0*f);
-
-    return mix( mix( dot( random2(i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ),
-                     dot( random2(i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
-                mix( dot( random2(i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ),
-                     dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
-}
-
-vec2 brownConradyDistortion(in vec2 uv, in float k1, in float k2)
-{
-    uv = uv * 2.0 - 1.0;	// brown conrady takes [-1:1]
-
-    // positive values of K1 give barrel distortion, negative give pincushion
-    float r2 = uv.x*uv.x + uv.y*uv.y;
-    uv *= 1.0 + k1 * r2 + k2 * r2 * r2;
-
-    // tangential distortion (due to off center lens elements)
-    // is not modeled in this function, but if it was, the terms would go here
-
-    uv = (uv * .5 + .5);	// restore -> [0:1]
-    return uv;
-}
-
-#define PHI (sqrt(5)*0.5 + 0.5)
-
-// https://math.stackexchange.com/questions/2491494/does-there-exist-a-smooth-approximation-of-x-bmod-y
-// found this equation and converted it to GLSL, usually e is supposed to be squared but in this case I like the way it looks as 0 //idk
-float smoothMod(float x, float y, float e){
-float top = cos(PI * (x/y)) * sin(PI * (x/y));
-float bot = pow(sin(PI * (x/(y+0.1))),2.)+ pow(e, sin(vTime));
-float at = atan(top/bot);
-return y * (1./2.) - (1./PI) * at ;
-}
-
-
-vec3 hsb2rgb( in vec3 c ){
-vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
-                       6.0)-3.0)-1.0,
-               0.0,
-               1.0 );
-rgb = rgb*rgb*(3.0-2.0*rgb);
-return c.z * mix( vec3(1.0), rgb, c.y);
-}
-
-// to see this function graphed out go to: https://www.desmos.com/calculator/rz7abjujdj
-vec3 cosPalette( float t )
-{
-vec2 normCoord = gl_FragCoord.xy/uResolution;
-t = t * 0.15;
-vec2 uv = -1. + 2. * normCoord;
-
-// please play around with these numbers to get a better palette
-vec3 brightness = vec3(sin(vTime), length(uv), cos(vTime));
-vec3 contrast = vec3(length(uv)*.5, PI, .5);
-vec3 osc = vec3(0.0,2.0,0.0);
-vec3 phase = vec3(1.,12.0,6.);
-return brightness + contrast*cos( 6.28318*(osc*t+phase) );
-}
-float random (in vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))
-                 * 43758.5453123);
-}
-
-float noisePix (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    // Smooth Interpolation
-
-    // Cubic Hermine Curve.  Same as SmoothStep()
-    vec2 u = f*f*(3.0-2.0*f);
-    // u = smoothstep(0.,1.,f);
-
-    // Mix 4 coorners percentages
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
+	return bgColor;
 }
 
 void main() {
+	vec2 uv = vUv - .5;
 
-  vec2 uv1 = vUv -.5;
-  vec2 uv2 = vUv -.5;
-  vec2 uv3 = vUv -.5;
-  vec2 uv4 = vUv -.5;
+	vec3 camPos = vec3(uv*6. ,30.); // x, y, z axis
+	vec3 rayDir = normalize(vec3(0.,0., -1.0)); // DOF
 
-
-
-  float slowTime = vTime * .05;
-
-  float alpha = 1.;
-
-         vec2 uv = vUv - .5;
-         vec2 rote = rotateUV(uv, vec2(.5), PI * vTime * .005);
-         vec2 roteC = rotateUV(uv, vec2(.5), -PI * vTime * .005);
-                float t = vTime * (2. * PI) * .5;
-                       float scale =  26. ;
-                              vec2 mouse = uMouse;
-                                     vec2 bulge = vec2(0.);
-  float d = 1.;
-  int circlesArrLength = 5;
-  vec3 circle = vec3 (0.,0., -.8 );
-  // uvRipple(uv, .009);
-  uv.x += stroke(cnoise(rote * 10. * uv.x), .5,.5);
-  uv.y += stroke(cnoise(roteC *3. * uv.y), .4, .6);
-
- float growth = 0.001 +circle.z * -8.;
-                                                                                  float r = growth * .022;
-
-                                                                                 bulge += (uv ) * scale/float(circlesArrLength)  * pow((length(uv) ), 1.5);
-                                                                                 d += smoothstep(r, r*0.5, length(uv -circle.xy )-r);
-
-                                                                                    uv = mix(rote * scale, bulge, d);
-                                                                                  uv.y += t * .05;
-                                                                                  // vec2 gv = fract(uv) - .5;
-                                                                                 vec2 id = floor(uv ) ;
-                                                                                 // uvRipple(id, .05);
-                                                                                 // id = brownConradyDistortion(id, -10., -1.);
-                                                                                 float pattern = mod(id.x+id.y, 2.);
-                                                                                                                                                                   vec3 color = vec3(pattern, 1.-pattern, uv.x);
-                                                                                                                                                                          // vec3 color = vec3(d);
-                                                                                         color.r += noisePix(uv1 * 13.);
-            // spinC(color.rg, .5);
-   color.b += noisePix(uv1 * 16.);
-
-color.rg = brownConradyDistortion(color.rg, -10., -10.);
-
-vec3 iri = hsb2rgb(vec3(color.z, color.y, uv1.y *.3));
-pMod2(color.zy, vec2(iri.x));
-iri += vec3(tan(length(iri.xz) / 12.0 + (t * .005)));
-//
-
-color = mix(vec3(color.rbg), vec3(iri.bgr), noisePix(rote * 20.));
-
-
- gl_FragColor = vec4(color, 1.0);
-
-
-
+  vec4 final = vec4(raymarch(rayDir, camPos));
+  // final.a = .8;
+    gl_FragColor = final;
 }
