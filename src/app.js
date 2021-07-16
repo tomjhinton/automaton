@@ -1,5 +1,4 @@
 import './style.scss'
-
 import * as THREE from 'three'
 
 import { gsap } from 'gsap'
@@ -8,6 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+import Prism from "prismjs"
 
 import vertexShader from './shaders/vertex.glsl'
 
@@ -25,15 +25,25 @@ import fragmentShader6 from './shaders/fragment-6.glsl'
 
 import fragmentShader7 from './shaders/fragment-7.glsl'
 
+const snippet = document.getElementById('snipp')
 
 
 
-let fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7]
+const fragArray = [fragmentShader1, fragmentShader2, fragmentShader3, fragmentShader4, fragmentShader5, fragmentShader6, fragmentShader7]
 
 let selected = Math.floor(Math.random() * fragArray.length )
 
+snippet.textContent = fragArray[selected]
+const points =[
+  {
+    position: new THREE.Vector3(1.55, 0.3, -0.6),
+    element: document.querySelector('.point-0')
+  }
 
-document.onkeydown = checkKey;
+]
+console.log(Prism)
+Prism.highlightAll()
+document.onkeydown = checkKey
 
 function resetL(){
   gsap.to(left.position, { duration: .5, y: left.position.y + 0.005, delay: 0 })
@@ -44,77 +54,95 @@ function resetR(){
 }
 
 function scrollLeft(){
+  snippet.textContent = fragArray[selected]
+  Prism.highlightAll()
   gsap.to(left.position, { duration: .5, y: left.position.y - 0.005, delay: 0, onComplete: resetL })
   // left.position.y -=.001
   if(selected > 0){
-       selected --
-     shaderMaterial.needsUpdate=true
+    selected --
+    shaderMaterial.needsUpdate=true
 
-     shaderMaterial.fragmentShader = fragArray[selected]
-  }
-
-  else if(selected === 0){
+    shaderMaterial.fragmentShader = fragArray[selected]
+  } else if(selected === 0){
     selected = fragArray.length -1
-     shaderMaterial.needsUpdate=true
+    shaderMaterial.needsUpdate=true
 
-     shaderMaterial.fragmentShader = fragArray[selected]
+    shaderMaterial.fragmentShader = fragArray[selected]
   }
 }
 
 function scrollRight(){
-    gsap.to(right.position, { duration: .5, y: right.position.y - 0.005, delay: 0, onComplete: resetR })
+  snippet.textContent = fragArray[selected]
+  Prism.highlightAll()
+
+  gsap.to(right.position, { duration: .5, y: right.position.y - 0.005, delay: 0, onComplete: resetR })
   if(selected < fragArray.length -1){
-      selected ++
-      shaderMaterial.needsUpdate=true
-
-     shaderMaterial.fragmentShader = fragArray[selected]
-  }
-
-else  if(selected === fragArray.length -1){
-  selected = 0
+    selected ++
     shaderMaterial.needsUpdate=true
 
-     shaderMaterial.fragmentShader = fragArray[selected]
+    shaderMaterial.fragmentShader = fragArray[selected]
+  } else  if(selected === fragArray.length -1){
+    selected = 0
+    shaderMaterial.needsUpdate=true
+
+    shaderMaterial.fragmentShader = fragArray[selected]
   }
 }
 
 
 function checkKey(e) {
-e.preventDefault()
-    e = e || window.event;
+  e.preventDefault()
+  e = e || window.event
 
-    if (e.keyCode == '38') {
-        // up arrow
-        // console.log(selected)
-    }
-    else if (e.keyCode == '40') {
-        // down arrow
-        // console.log(fragArray[selected])
-    }
-    else if (e.keyCode == '37') {
-       // left arrow
-       scrollLeft()
+  if (e.keyCode === '38') {
+    // up arrow
+    // console.log(selected)
+  } else if (e.keyCode === '40') {
+    // down arrow
+    // console.log(fragArray[selected])
+  } else if (e.keyCode === '37') {
+    // left arrow
+    scrollLeft()
 
+  } else if (e.keyCode === '39') {
+    // right arrow
+    // console.log(selected)
 
+    scrollRight()
 
-
-
-    }
-    else if (e.keyCode == '39') {
-       // right arrow
-       // console.log(selected)
-
-        scrollRight()
-
-    }
+  }
 
 }
 
+var modal = document.getElementById('myModal')
+
+// Get the button that opens the modal
+var btn = document.getElementById('myBtn')
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName('close')[0]
+
+// When the user clicks on the button, open the modal
+btn.onclick = function() {
+  modal.style.display = 'block'
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style.display = 'none'
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target === modal) {
+    modal.style.display = 'none'
+  }
+}
 
 const canvas = document.querySelector('canvas.webgl')
 
 const scene = new THREE.Scene()
-scene.background = new THREE.Color( 0xffffff )
+// scene.background = new THREE.Color( 0xffffff )
 const loadingBarElement = document.querySelector('.loading-bar')
 const loadingBarText = document.querySelector('.loading-bar-text')
 const loadingManager = new THREE.LoadingManager(
@@ -182,7 +210,7 @@ const shaderMaterial  = new THREE.ShaderMaterial({
 // console.log(shaderMaterial)
 let sceneGroup, left, right, displayScreen, display
 
-let intersectsArr = []
+const intersectsArr = []
 gtlfLoader.load(
   'display.glb',
   (gltf) => {
@@ -210,9 +238,9 @@ gtlfLoader.load(
     display = gltf.scene.children.find((child) => {
       return child.name === 'Body'
     })
-intersectsArr.push(left.children[0], left.children[1], right.children[0], right.children[1], displayScreen)
- displayScreen.needsUpdate = true
- // console.log(left)
+    intersectsArr.push(left.children[0], left.children[1], right.children[0], right.children[1], displayScreen)
+    displayScreen.needsUpdate = true
+    // console.log(left)
 
 
 
@@ -278,37 +306,38 @@ controls.maxPolarAngle = Math.PI / 2 - 0.1
  */
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
-  antialias: true
+  antialias: true,
+  alpha: true
 })
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-const raycaster = new THREE.Raycaster();
+renderer.setClearColor( 0x000000, 0 )
+const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 
-renderer.domElement.addEventListener( 'pointerdown', onClick, false );
+renderer.domElement.addEventListener( 'pointerdown', onClick, false )
 
 function onClick() {
-	event.preventDefault();
-// console.log(mouse.x)
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  event.preventDefault()
   // console.log(mouse.x)
-	raycaster.setFromCamera( mouse, camera );
+  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1
+  // console.log(mouse.x)
+  raycaster.setFromCamera( mouse, camera )
 
-	var intersects = raycaster.intersectObjects( intersectsArr, true );
+  var intersects = raycaster.intersectObjects( intersectsArr, true )
 
-	if ( intersects.length > 0 ) {
-	    // console.log( 'Intersection:', intersects[0].object.parent.name );
+  if ( intersects.length > 0 ) {
+    // console.log( 'Intersection:', intersects[0].object.parent.name );
 
-      if(intersects[0].object.parent.name === 'Left'){
-        scrollLeft()
-      }
-      if(intersects[0].object.parent.name === 'Right'){
-        scrollRight()
-      }
-	}
+    if(intersects[0].object.parent.name === 'Left'){
+      scrollLeft()
+    }
+    if(intersects[0].object.parent.name === 'Right'){
+      scrollRight()
+    }
+  }
 
 
 }
@@ -326,7 +355,33 @@ const tick = () =>{
     // sceneGroup.rotation.y += .001
     displayScreen.needsUpdate = true
   }
+  if(sceneGroup){
+    for(const point of points){
+      const screenPosition = point.position.clone()
+      screenPosition.project(camera)
+      raycaster.setFromCamera(screenPosition, camera)
 
+      const intersects = raycaster.intersectObjects(scene.children, true)
+      if(intersects.length === 0){
+        point.element.classList.add('visible')
+      }else{
+        const intersectionDistance  = intersects[0].distance
+        const pointDistance = point.position.distanceTo(camera.position)
+        if(intersectionDistance < pointDistance){
+          point.element.classList.remove('visible')
+        } else {
+          point.element.classList.add('visible')
+        }
+
+      }
+
+      const translateX = screenPosition.x * sizes.width * 0.5
+      const translateY = - screenPosition.y * sizes.height * 0.5
+      point.element.style.transform = `translate(${translateX}px, ${translateY}px)`
+
+    }
+
+  }
 
 
   // Update controls

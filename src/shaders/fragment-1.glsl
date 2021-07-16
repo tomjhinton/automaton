@@ -4,9 +4,6 @@ uniform vec3 uColor;
 uniform vec3 uPosition;
 uniform vec3 uRotation;
 uniform vec2 uResolution;
-// uniform sampler2D uTexture;
-// uniform sampler2D uVideo;
-// uniform sampler2D uVideo2;
 uniform vec2 uMouse;
 
 
@@ -296,7 +293,7 @@ vec4 sdScene(vec3 p) {
   color4.xyz += warpsScale * .025 * cos(17. * color4.yzx + vTime);
   color4.xyz += warpsScale * .0125 * cos(21. * color4.yzx + vTime);
 
-  vec2 thing = brownConradyDistortion(vUv, sin(vTime * .5) * 10. , cos(vTime * .5) * 10. );
+  
 
   float displacement = sin(3. * p.x + vTime * .5 ) * sin(3. * p.y + vTime  ) * sin(3. * p.z + vTime) * 0.25 ;
 
